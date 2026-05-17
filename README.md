@@ -1,6 +1,6 @@
 # EARS Spec Engine
 
-**EARS Spec-Driven Development** — генерация требований в нотации EARS (Easy Approach to Requirements Syntax), документов дизайна и задач с отслеживанием зависимостей. Вдохновлено [Kiro Spec-Driven Development](https://x.com/mari0_zechner/status/1851757146489209018).
+**EARS Spec-Driven Development** — generate requirements in EARS (Easy Approach to Requirements Syntax) notation, design documents, and dependency-tracked tasks directly inside pi. Inspired by Amazon Kiro Spec-Driven Development.
 
 [![npm](https://img.shields.io/npm/v/ears-spec-engine)](https://www.npmjs.com/package/ears-spec-engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,66 +10,66 @@
 pi install npm:ears-spec-engine
 ```
 
-## Возможности
+## Features
 
-Расширение добавляет в **pi** три инструмента и четыре команды для полного SDD-воркфлоу:
+This extension adds three LLM-callable tools and five user commands for a complete SDD workflow:
 
-### 🛠️ Инструменты (LLM)
+### 🛠️ Tools (LLM)
 
-| Инструмент | Назначение |
-|-----------|------------|
-| `ears_validate` | Валидация EARS-грамматики: проверяет, что требования следуют UPPERCASE-правилам |
-| `ears_analyze` | Анализ требований на логические конфликты, двусмысленности и неполноту |
-| `ears_analyze_deps` | Анализ зависимостей задач с построением волн выполнения |
+| Tool                | Purpose                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `ears_validate`     | EARS grammar validation against the 5 canonical patterns (Ubiquitous, Event-Driven, State-Driven, Optional, Complex) |
+| `ears_analyze`      | Analyze requirements for logical conflicts, ambiguous language, and incompleteness (missing edge cases)              |
+| `ears_analyze_deps` | Analyze task dependencies, build execution waves, and compute the critical path                                      |
 
-### ⌨️ Команды (пользовательские)
+### ⌨️ Commands (user)
 
-| Команда | Назначение |
-|---------|------------|
-| `/ears:quick-plan` | Быстрый трек: уточнения + генерация всех 3 документов за один проход |
-| `/ears:spec` | Фаза 1: генерация EARS-требований из описания фичи |
-| `/ears:analyze` | Анализ существующих требований (из файла или состояния) |
-| `/ears:design` | Фаза 2: генерация дизайн-документа |
-| `/ears:tasks` | Фаза 3: декомпозиция на задачи с зависимостями |
-| `/ears:status` | Текущее состояние spec-движка |
+| Command            | Purpose                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `/ears:quick-plan` | Fast-track: clarifying questions + generate all 3 documents in one pass |
+| `/ears:spec`       | Phase 1: generate EARS requirements from a feature description          |
+| `/ears:analyze`    | Analyze existing requirements (from file or session state)              |
+| `/ears:design`     | Phase 2: generate a design document                                     |
+| `/ears:tasks`      | Phase 3: generate a task breakdown with dependency analysis             |
+| `/ears:status`     | Show current spec engine state                                          |
 
-### 🧩 Вложенный скилл
+### 🧩 Nested Skill
 
-Расширение автоматически регистрирует скилл `ears-spec`, доступный через `/ears-spec`.
+The extension automatically registers the `ears-spec` skill, accessible via `/ears-spec`.
 
-## Установка
+## Installation
 
 ```bash
-# Глобальная установка
+# Global install
 pi install npm:ears-spec-engine
 
-# Локальная в проект
+# Project-local install
 pi install -l npm:ears-spec-engine
 ```
 
-## Использование
+## Usage
 
-### Быстрый старт (все фазы за один раз)
+### Quick Start (all phases in one pass)
 
 ```
-/ears:quick-plan <описание фичи>
+/ears:quick-plan <feature description>
 ```
 
-### Пошаговый режим
+### Step-by-Step Mode
 
-1. **Требования**: `/ears:spec <описание фичи>` — генерация user stories + EARS acceptance criteria
-2. **Дизайн**: `/ears:design` — архитектура, модели, API, ошибки
-3. **Задачи**: `/ears:tasks` — декомпозиция с зависимостями и волнами выполнения
+1. **Requirements**: `/ears:spec <feature description>` — generates user stories + EARS acceptance criteria
+2. **Design**: `/ears:design` — architecture, data models, API contracts, error handling
+3. **Tasks**: `/ears:tasks` — task breakdown with dependencies and execution waves
 
-### Проверка состояния
+### Check Status
 
 ```
 /ears:status
 ```
 
-## Пример
+## Example
 
-Для `/ears:spec user authentication` вы получите структуру:
+Running `/ears:spec user authentication` produces this structure:
 
 ```
 .ears-spec/user-authentication/
@@ -78,69 +78,69 @@ pi install -l npm:ears-spec-engine
 └── tasks.md           # Implementation tasks with dependencies
 ```
 
-### Пять паттернов EARS
+### The Five EARS Patterns
 
-| Паттерн | Шаблон | Пример |
-|---------|--------|--------|
-| **Ubiquitous** | `THE SYSTEM SHALL <response>` | `THE SYSTEM SHALL hash passwords using bcrypt with cost factor 12.` |
-| **Event-Driven** | `WHEN <trigger>, the SYSTEM SHALL <response>` | `WHEN a payment webhook is received, the SYSTEM SHALL verify the HMAC signature.` |
-| **State-Driven** | `WHILE <state>, the SYSTEM SHALL <response>` | `WHILE the system is in maintenance mode, the SYSTEM SHALL return HTTP 503.` |
-| **Optional** | `WHERE <feature>, the SYSTEM SHALL <response>` | `WHERE the enterprise SSO module is enabled, the SYSTEM SHALL validate tokens against SAML IdP.` |
-| **Complex** | `<condition>, the SYSTEM SHALL <response>` | `WITHIN 500ms of receiving a query, the SYSTEM SHALL return ranked results.` |
+| Pattern          | Template                                       | Example                                                                                          |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Ubiquitous**   | `THE SYSTEM SHALL <response>`                  | `THE SYSTEM SHALL hash passwords using bcrypt with cost factor 12.`                              |
+| **Event-Driven** | `WHEN <trigger>, the SYSTEM SHALL <response>`  | `WHEN a payment webhook is received, the SYSTEM SHALL verify the HMAC signature.`                |
+| **State-Driven** | `WHILE <state>, the SYSTEM SHALL <response>`   | `WHILE the system is in maintenance mode, the SYSTEM SHALL return HTTP 503.`                     |
+| **Optional**     | `WHERE <feature>, the SYSTEM SHALL <response>` | `WHERE the enterprise SSO module is enabled, the SYSTEM SHALL validate tokens against SAML IdP.` |
+| **Complex**      | `<condition>, the SYSTEM SHALL <response>`     | `WITHIN 500ms of receiving a query, the SYSTEM SHALL return ranked results.`                     |
 
-### Ключевые правила
+### Grammar Rules
 
-- ✅ **SHALL** — обязательно (не `should`, `will`, `must`)
-- ✅ **UPPERCASE** ключевые слова: `WHEN`, `WHILE`, `WHERE`, `WITHIN`, `THE SYSTEM SHALL`
-- ❌ Запрещены: `appropriate`, `timely`, `efficient`, `user-friendly`, `properly`, `various`
+- ✅ **SHALL** is mandatory (not `should`, `will`, `must`)
+- ✅ **UPPERCASE** keywords: `WHEN`, `WHILE`, `WHERE`, `WITHIN`, `THE SYSTEM SHALL`
+- ❌ Banned ambiguous terms: `appropriate`, `timely`, `efficient`, `user-friendly`, `properly`, `various`
 
-## Разработка
+## Development
 
 ```bash
-# Клонировать
+# Clone
 git clone git@github.com:XpycT/ears-spec-engine.git
 cd ears-spec-engine
 
-# Установка зависимостей
+# Install dependencies
 npm install
 
-# Запуск тестов
+# Run tests
 npm test
 ```
 
-Все тесты используют встроенный `node:test`:
+All tests use Node's built-in `node:test` runner:
 
 ```
 npm test
-# 68 тестов — 12 suites, all pass
+# 68 tests — 12 suites, all pass
 ```
 
-## Архитектура
+## Architecture
 
 ```
 ears-spec-engine/
-├── index.ts           # Точка входа расширения (регистрация инструментов и команд)
+├── index.ts           # Extension entry point (tool and command registration)
 ├── lib/
-│   ├── types.ts       # TypeScript-типы
-│   ├── ears.ts        # EARS-валидация, конфликты, анализ
-│   └── templates.ts   # Шаблоны документов и анализ зависимостей
+│   ├── types.ts       # TypeScript type definitions
+│   ├── ears.ts        # EARS validation, conflict detection, analysis
+│   └── templates.ts   # Document rendering and dependency graph analysis
 ├── skills/
 │   └── ears-spec/
-│       └── SKILL.md   # Вложенный скилл
+│       └── SKILL.md   # Nested skill definition
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
 
-## Для чего это нужно
+## Why
 
-Spec-Driven Development с EARS-нотацией позволяет:
+Spec-Driven Development with EARS notation enables:
 
-1. **Писать тестируемые требования** — формальная грамматика исключает двусмысленность
-2. **Автоматически проверять качество** — инструменты валидируют грамматику, находят конфликты и пробелы
-3. **Планировать разработку** — задачи с зависимостями и волнами выполнения
-4. **Трассировать требования** — каждая задача привязана к ID требования
+1. **Testable requirements** — formal grammar eliminates ambiguity
+2. **Automated quality checks** — tools validate grammar, detect conflicts, and find gaps
+3. **Implementation planning** — tasks with explicit dependencies and execution waves
+4. **Requirement traceability** — every task links back to a requirement ID
 
-## Лицензия
+## License
 
 MIT
