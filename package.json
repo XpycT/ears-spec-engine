@@ -1,0 +1,36 @@
+{
+  "name": "ears-spec-engine",
+  "version": "1.0.0",
+  "description": "EARS Spec-Driven Development — Kiro-inspired SDD with EARS notation, design docs, and dependency-tracked tasks",
+  "keywords": ["pi-package", "ears", "spec-driven-development", "requirements", "ears-requirements"],
+  "license": "MIT",
+  "author": "XpycT <XpycT.TOP@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XpycT/ears-spec-engine.git"
+  },
+  "homepage": "https://github.com/XpycT/ears-spec-engine#readme",
+  "bugs": {
+    "url": "https://github.com/XpycT/ears-spec-engine/issues"
+  },
+  "type": "module",
+  "files": ["index.ts", "lib/", "skills/"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.1.0",
+    "typebox": ">=0.30.0"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "test": "node --import tsx --test lib/ears.test.ts lib/templates.test.ts",
+    "prepare": "npm test"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.3"
+  }
+}
