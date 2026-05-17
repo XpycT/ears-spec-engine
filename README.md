@@ -12,7 +12,7 @@ pi install npm:ears-spec-engine
 
 ## Features
 
-This extension adds three LLM-callable tools and five user commands for a complete SDD workflow:
+This extension adds three LLM-callable tools and six user commands for a complete SDD workflow:
 
 ### 🛠️ Tools (LLM)
 
@@ -31,7 +31,7 @@ This extension adds three LLM-callable tools and five user commands for a comple
 | `/ears:analyze`    | Analyze existing requirements (from file or session state)              |
 | `/ears:design`     | Phase 2: generate a design document                                     |
 | `/ears:tasks`      | Phase 3: generate a task breakdown with dependency analysis             |
-| `/ears:status`     | Show current spec engine state                                          |
+| `/ears:status`     | Show current spec engine state (detects files on disk automatically)   |
 
 ### 🧩 Nested Skill
 
@@ -55,6 +55,8 @@ pi install -l npm:ears-spec-engine
 /ears:quick-plan <feature description>
 ```
 
+> **Note:** The AI automatically picks a short English kebab-case directory name (e.g. `open-file-in-browser`) for your spec, regardless of the language of your input. You can describe features in any language.
+
 ### Step-by-Step Mode
 
 1. **Requirements**: `/ears:spec <feature description>` — generates user stories + EARS acceptance criteria
@@ -66,6 +68,8 @@ pi install -l npm:ears-spec-engine
 ```
 /ears:status
 ```
+
+`/ears:status` automatically discovers your spec directory and checks which files exist on disk. It reports status for requirements, design, and tasks — even across session restarts.
 
 ## Example
 
@@ -93,6 +97,19 @@ Running `/ears:spec user authentication` produces this structure:
 - ✅ **SHALL** is mandatory (not `should`, `will`, `must`)
 - ✅ **UPPERCASE** keywords: `WHEN`, `WHILE`, `WHERE`, `WITHIN`, `THE SYSTEM SHALL`
 - ❌ Banned ambiguous terms: `appropriate`, `timely`, `efficient`, `user-friendly`, `properly`, `various`
+
+## Changelog
+
+### v1.1.0
+
+- **AI-chosen directory names**: `/ears:spec` and `/ears:quick-plan` no longer derive directory names from user input. The AI picks a short English kebab-case name (2-4 words) like `open-file-in-browser`, so descriptions in any language produce clean paths.
+- **Unicode feature name support**: The `specDir()` sanitizer now uses `\p{L}` and `\p{N}` Unicode properties instead of ASCII-only `[a-z0-9]`. Cyrillic, Chinese, Arabic and other scripts are preserved in directory names.
+- **Disk-based status**: `/ears:status` checks for `requirements.md`, `design.md`, and `tasks.md` on disk instead of relying solely on in-memory state. It also auto-discovers the spec directory by scanning `.ears-spec/`.
+- **Auto-discovery for all commands**: `/ears:design`, `/ears:tasks`, and `/ears:analyze` now auto-discover the spec directory when state is empty, instead of failing with "no specs directory".
+
+### v1.0.0
+
+- Initial release: EARS validation, analysis, dependency analysis, 6 commands, nested skill.
 
 ## Development
 
