@@ -49,23 +49,29 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 		currentSpecsDir: "",
 	};
 
-	function specDir(featureName: string): string {
-		const sanitized = featureName
-			.toLowerCase()
-			.replace(/\s+/g, "-")
-			.replace(/[^\p{L}\p{N}._-]/gu, "")
-			.replace(/-+/g, "-")
-			.replace(/^-|-$/g, "");
-		if (!sanitized) {
-			throw new Error(
-				`Invalid feature name: "${featureName}" produces an empty directory name after sanitization.`,
-			);
+	/** Find an existing specs directory by scanning .ears-spec/ */
+	async function findSpecsDir(): Promise<string | null> {
+		const earsDir = path.join(state.projectRoot, ".ears-spec");
+		try {
+			const entries = await fs.readdir(earsDir);
+			const subdirs: string[] = [];
+			for (const entry of entries) {
+				const full = path.join(earsDir, entry);
+				const stat = await fs.stat(full).catch(() => null);
+				if (stat?.isDirectory()) subdirs.push(entry);
+			}
+			if (subdirs.length === 1) {
+				state.currentSpecsDir = path.join(earsDir, subdirs[0]!);
+				return state.currentSpecsDir;
+			}
+			if (subdirs.length > 1) {
+				// Multiple spec dirs — return null to let command resolve ambiguity
+				return null;
+			}
+		} catch {
+			// .ears-spec directory doesn't exist yet
 		}
-		return path.join(state.projectRoot, ".ears-spec", sanitized);
-	}
-
-	async function ensureSpecDir(dir: string): Promise<void> {
-		await fs.mkdir(dir, { recursive: true });
+		return null;
 	}
 
 	// ─── Register the nested skill ──────────────────────────────────────────────
@@ -297,10 +303,6 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 				return;
 			}
 
-			const featureDir = specDir(args);
-			await ensureSpecDir(featureDir);
-			state.currentSpecsDir = featureDir;
-
 			pi.sendMessage(
 				{
 					customType: "ears-spec-quick-plan",
@@ -319,14 +321,11 @@ After I get your answers, I will generate:
 2. **design.md** — Architecture, data flow, and design decisions
 3. **tasks.md** — Task breakdown with dependency tracking
 
-Current directory: ${featureDir}
-Specs will be saved to: ${featureDir}/`,
+**IMPORTANT: Choose a short English kebab-case name (2-4 words) for this feature directory.** For example, for "добавь открытие файла в веббраузере после скачивания" use "open-file-in-browser". Create the directory \`.ears-spec/ENGLISH-SLUG/\` before saving files.`,
 					display: true,
 				},
 				{ triggerTurn: true },
 			);
-
-			ctx.ui.notify(`Quick plan initialized at ${featureDir}`, "info");
 		},
 	});
 
@@ -341,10 +340,6 @@ Specs will be saved to: ${featureDir}/`,
 				ctx.ui.notify("Usage: /ears:spec <feature description>", "warning");
 				return;
 			}
-
-			const featureDir = specDir(args);
-			await ensureSpecDir(featureDir);
-			state.currentSpecsDir = featureDir;
 
 			pi.sendMessage(
 				{
@@ -366,8 +361,9 @@ ${Object.values(EARS_PATTERNS)
 
 4. Run the \`ears_validate\` tool to check grammar
 5. Run the \`ears_analyze\` tool to detect conflicts/ambiguities
-6. Present the requirements.md for user approval, then save it to:
-   ${featureDir}/requirements.md
+6. Present the requirements.md for user approval, then save it
+
+**IMPORTANT: Choose a short English kebab-case name (2-4 words) for this feature directory.** For example, for "добавь открытие файла в веббраузере после скачивания" use "open-file-in-browser". Create the directory \`.ears-spec/ENGLISH-SLUG/\` before saving files.
 
 Use this format for each requirement (UPPERCASE keywords):
 - **REQ-NNN** [PatternName] WHEN/WHILE/WHERE ..., the SYSTEM SHALL ...
@@ -381,8 +377,6 @@ Follow EARS grammar rules:
 				},
 				{ triggerTurn: true },
 			);
-
-			ctx.ui.notify(`Requirements phase started at ${featureDir}`, "info");
 		},
 	});
 
@@ -394,6 +388,10 @@ Follow EARS grammar rules:
 			"Analyze existing requirements for conflicts, ambiguities, and completeness. Reads from the spec directory if no state is loaded.",
 		handler: async (_args, ctx) => {
 			// Try to load from file if state is empty
+			if (!state.requirements && !state.currentSpecsDir) {
+				// Auto-discover specs directory
+				await findSpecsDir();
+			}
 			if (!state.requirements && state.currentSpecsDir) {
 				try {
 					const reqPath = path.join(state.currentSpecsDir, "requirements.md");
@@ -451,6 +449,9 @@ Follow EARS grammar rules:
 			"Phase 2: Generate a design document from the approved requirements",
 		handler: async (_args, ctx) => {
 			if (!state.currentSpecsDir) {
+				await findSpecsDir();
+			}
+			if (!state.currentSpecsDir) {
 				ctx.ui.notify(
 					"No specs directory. Start with /ears:spec first",
 					"warning",
@@ -491,6 +492,9 @@ Present for user approval after generation.`,
 		description:
 			"Phase 3: Generate task breakdown with dependency analysis from requirements + design",
 		handler: async (_args, ctx) => {
+			if (!state.currentSpecsDir) {
+				await findSpecsDir();
+			}
 			if (!state.currentSpecsDir) {
 				ctx.ui.notify(
 					"No specs directory. Complete /ears:spec first",
@@ -534,25 +538,9 @@ Present for user approval after generation.`,
 			parts.push("📋 **EARS Spec Engine Status**\n");
 
 			// Determine the specs directory: from state or by scanning .ears-spec/
-			let specsDir = state.currentSpecsDir;
+			let specsDir: string | undefined = state.currentSpecsDir || undefined;
 			if (!specsDir) {
-				// Try to find a specs directory by scanning .ears-spec/
-				const earsDir = path.join(state.projectRoot, ".ears-spec");
-				try {
-					const entries = await fs.readdir(earsDir);
-					const subdirs: string[] = [];
-					for (const entry of entries) {
-						const full = path.join(earsDir, entry);
-						const stat = await fs.stat(full).catch(() => null);
-						if (stat?.isDirectory()) subdirs.push(entry);
-					}
-					if (subdirs.length === 1) {
-						specsDir = path.join(earsDir, subdirs[0]!);
-						state.currentSpecsDir = specsDir;
-					}
-				} catch {
-					// .ears-spec directory doesn't exist yet
-				}
+				specsDir = (await findSpecsDir()) ?? undefined;
 			}
 
 			if (specsDir) {
