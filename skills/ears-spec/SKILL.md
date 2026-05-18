@@ -21,18 +21,18 @@ Every requirement MUST follow one of these five canonical patterns:
 | Pattern | Template | When to Use |
 |---------|----------|-------------|
 | **Ubiquitous** | `THE SYSTEM SHALL <response>` | Always-active rules (logging, validation basics, security) |
-| **Event-Driven** | `WHEN <trigger>, the SYSTEM SHALL <response>` | Reactive behavior (webhooks, user actions, system events) |
-| **State-Driven** | `WHILE <state condition>, the SYSTEM SHALL <response>` | State-dependent behavior (maintenance mode, subscription status) |
-| **Optional** | `WHERE <feature>, the SYSTEM SHALL <response>` | Feature-flagged behavior (SSO module, caching layer) |
-| **Complex** | `<temporal or compound condition>, the SYSTEM SHALL <response>` | Combined conditions (timeouts, compound triggers) |
+| **Event-Driven** | `WHEN <trigger>, THE SYSTEM SHALL <response>` | Reactive behavior (webhooks, user actions, system events) |
+| **State-Driven** | `WHILE <state condition>, THE SYSTEM SHALL <response>` | State-dependent behavior (maintenance mode, subscription status) |
+| **Optional** | `WHERE <feature>, THE SYSTEM SHALL <response>` | Feature-flagged behavior (SSO module, caching layer) |
+| **Complex** | `<temporal or compound condition>, THE SYSTEM SHALL <response>` | Combined conditions (timeouts, compound triggers) |
 
 ### Grammar Rules (UPPERCASE Keywords)
 
 1. **Ubiquitous**: MUST start with `THE SYSTEM SHALL`. No additional conditions.
-2. **Event-Driven**: MUST start with `WHEN <trigger>`, then `, the SYSTEM SHALL <response>`.
-3. **State-Driven**: MUST start with `WHILE <state>`, then `, the SYSTEM SHALL <response>`.
-4. **Optional**: MUST start with `WHERE <feature>`, then `, the SYSTEM SHALL <response>`.
-5. **Complex**: MUST include a temporal constraint (`WITHIN Nms`) or compound condition (`WHEN X AND Y`), then `, the SYSTEM SHALL <response>`.
+2. **Event-Driven**: MUST start with `WHEN <trigger>`, then `, THE SYSTEM SHALL <response>`.
+3. **State-Driven**: MUST start with `WHILE <state>`, then `, THE SYSTEM SHALL <response>`.
+4. **Optional**: MUST start with `WHERE <feature>`, then `, THE SYSTEM SHALL <response>`.
+5. **Complex**: MUST include a temporal constraint (`WITHIN Nms`) or compound condition (`WHEN X AND Y`), then `, THE SYSTEM SHALL <response>`.
 
 Anti-patterns to avoid:
 - ❌ `the system should...` — MUST use `THE SYSTEM SHALL`

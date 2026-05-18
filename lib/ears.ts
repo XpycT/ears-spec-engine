@@ -82,7 +82,7 @@ export function formatRequirement(req: EarsRequirement): string {
 		.replace(/^while\s+/i, "WHILE ")
 		.replace(/^where\s+/i, "WHERE ")
 		.replace(/^within\s+/i, "WITHIN ")
-		.replace(/,\s+the\s+system\s+shall\s+/i, ", the SYSTEM SHALL ");
+		.replace(/,\s+the\s+system\s+shall\s+/i, ", THE SYSTEM SHALL ");
 	return `- **${req.id}** [${pattern.name}] ${formatted}`;
 }
 

@@ -299,7 +299,7 @@ describe("formatRequirement", () => {
 			req("REQ-002", "event-driven", "when a user logs in, the system shall validate the token."),
 		);
 		assert.ok(result.includes("WHEN "), `Expected uppercase WHEN, got: ${result}`);
-		assert.ok(result.includes("the SYSTEM SHALL"), `Expected SYSTEM SHALL after trigger, got: ${result}`);
+		assert.ok(result.includes("THE SYSTEM SHALL"), `Expected THE SYSTEM SHALL after trigger, got: ${result}`);
 	});
 
 	it("uppercases WHILE in state-driven requirements", () => {
