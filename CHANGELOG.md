@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+- **Fix:** `formatRequirement` now outputs `THE SYSTEM SHALL` (all caps) instead of `the SYSTEM SHALL`, matching the validator's expectation.
+- **Docs:** Updated `ears-spec` skill templates to consistently show `THE SYSTEM SHALL` in all pattern examples.
+
 ## 1.1.1
 
 - **Refactor:** Removed hardcoded ASCII diagram and TBD Decisions Log from `renderDesign` — AI now generates these organically.
