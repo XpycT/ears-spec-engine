@@ -26,9 +26,8 @@ import { Type } from "typebox";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
-const EXT_DIR = dirname(fileURLToPath(import.meta.url));
+const EXT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 import type { EarsPattern, SpecEngineState } from "./lib/types.js";
 import {
@@ -77,7 +76,7 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 	// ─── Register the nested skill ──────────────────────────────────────────────
 	pi.on("resources_discover", async (_event, _ctx) => {
 		return {
-			skillPaths: [join(EXT_DIR, "skills")],
+			skillPaths: [path.join(EXT_DIR, "skills")],
 		};
 	});
 
@@ -276,11 +275,20 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 			lines.push(`**Minimum Waves (parallel):** ${analysis.waves.length}`);
 			lines.push(`**Minimum Waves (serial):** ${params.tasks.length}`);
 
+			if (analysis.unknownDeps && analysis.unknownDeps.length > 0) {
+				lines.push("");
+				lines.push("⚠️ **Unknown Dependencies:**");
+				for (const dep of analysis.unknownDeps) {
+					lines.push(`  - \`${dep}\` references a task that doesn't exist in the list`);
+				}
+			}
+
 			return {
 				content: [{ type: "text", text: lines.join("\n") }],
 				details: {
 					waves: analysis.waves.length,
 					criticalPath: analysis.criticalPath,
+					unknownDeps: analysis.unknownDeps,
 				},
 			};
 		},
@@ -395,11 +403,20 @@ Follow EARS grammar rules:
 			if (!state.requirements && state.currentSpecsDir) {
 				try {
 					const reqPath = path.join(state.currentSpecsDir, "requirements.md");
-					await fs.access(reqPath);
-					// If requirements.md exists, tell the user to use ears_analyze tool
-					ctx.ui.notify(
-						`Found requirements.md at ${reqPath}. Use the \`ears_analyze\` tool with the parsed requirements to get a full analysis.`,
-						"info",
+					const content = await fs.readFile(reqPath, "utf-8");
+					pi.sendMessage(
+						{
+							customType: "ears-analyze-file",
+							content: `[EARS REQUIREMENTS ANALYSIS]
+
+I found requirements.md at \`${reqPath}\`. Please analyze these requirements for conflicts, ambiguities, and completeness, then share the report:
+
+${content}
+
+Run the \`ears_analyze\` tool (ears_analyze) to check grammar and detect issues after reviewing.`,
+							display: true,
+						},
+						{ triggerTurn: true },
 					);
 					return;
 				} catch {

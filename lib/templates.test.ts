@@ -108,10 +108,9 @@ describe("renderDesign", () => {
 		assert.ok(md.startsWith("# MyApp — Design"));
 	});
 
-	it("includes component architecture diagram", () => {
+	it("includes component architecture heading", () => {
 		const md = renderDesign("MyApp", []);
-		assert.ok(md.includes("Component Architecture"));
-		assert.ok(md.includes("[System Boundary]"));
+		assert.ok(md.includes("## Component Architecture"));
 	});
 
 	it("renders custom sections", () => {
@@ -120,11 +119,6 @@ describe("renderDesign", () => {
 		]);
 		assert.ok(md.includes("Data Models"));
 		assert.ok(md.includes("User: { id, name, email }"));
-	});
-
-	it("includes decisions log", () => {
-		const md = renderDesign("MyApp", []);
-		assert.ok(md.includes("Decisions Log"));
 	});
 });
 

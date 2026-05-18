@@ -62,35 +62,6 @@ export function renderDesign(
 	lines.push("");
 	lines.push("## Component Architecture");
 	lines.push("");
-	lines.push("```");
-	lines.push("[System Boundary]");
-	lines.push("  │");
-	lines.push("  ├─ [Frontend]");
-	lines.push("  │    ├─ Components");
-	lines.push("  │    ├─ State Management");
-	lines.push("  │    └─ Routing");
-	lines.push("  │");
-	lines.push("  ├─ [API Layer]");
-	lines.push("  │    ├─ REST Endpoints");
-	lines.push("  │    ├─ WebSocket / SSE");
-	lines.push("  │    └─ Authentication");
-	lines.push("  │");
-	lines.push("  ├─ [Business Logic]");
-	lines.push("  │    ├─ Services");
-	lines.push("  │    ├─ Domain Models");
-	lines.push("  │    └─ Validation");
-	lines.push("  │");
-	lines.push("  ├─ [Data Layer]");
-	lines.push("  │    ├─ Database");
-	lines.push("  │    ├─ Cache");
-	lines.push("  │    └─ External APIs");
-	lines.push("  │");
-	lines.push("  └─ [Infrastructure]");
-	lines.push("       ├─ CI/CD Pipeline");
-	lines.push("       ├─ Monitoring");
-	lines.push("       └─ Deploy Targets");
-	lines.push("```");
-	lines.push("");
 
 	for (const section of sections) {
 		lines.push(`## ${section.title}`);
@@ -98,13 +69,6 @@ export function renderDesign(
 		lines.push(section.content);
 		lines.push("");
 	}
-
-	lines.push("## Decisions Log");
-	lines.push("");
-	lines.push("| Decision | Option Chosen | Rationale |");
-	lines.push("|----------|--------------|----------|");
-	lines.push("| ADR-001 | TBD | TBD |");
-	lines.push("");
 
 	return lines.join("\n");
 }
@@ -188,6 +152,18 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 		}
 	}
 
+	// ── Collect unknown dependency references ────────────────────────────
+	const unknownDeps: string[] = [];
+	const seenUnknowns = new Set<string>();
+	for (const task of tasks) {
+		for (const depId of task.dependencies) {
+			if (!taskMap.has(depId) && !seenUnknowns.has(depId)) {
+				seenUnknowns.add(depId);
+				unknownDeps.push(depId);
+			}
+		}
+	}
+
 	// ── Build execution waves via topological layering ─────────────────────
 	// Tasks whose dependencies are all already scheduled go into the next wave.
 	// Cycles are broken by force-scheduling remaining tasks.
@@ -268,7 +244,11 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 		}
 	}
 
-	return { waves, criticalPath };
+	const result: DependencyAnalysis = { waves, criticalPath };
+	if (unknownDeps.length > 0) {
+		result.unknownDeps = unknownDeps;
+	}
+	return result;
 }
 
 /**

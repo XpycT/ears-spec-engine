@@ -1,6 +1,6 @@
 {
   "name": "ears-spec-engine",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "EARS Spec-Driven Development — Kiro-inspired SDD with EARS notation, design docs, and dependency-tracked tasks",
   "keywords": ["pi-package", "ears", "spec-driven-development", "requirements", "ears-requirements"],
   "license": "MIT",
