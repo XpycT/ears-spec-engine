@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0
+
+- **Added:** `LICENSE` file (MIT).
+- **Added:** `.editorconfig` — tabs for TS/JS, spaces for JSON/YAML, LF endings, trim whitespace.
+- **Added:** `package.json` `main` and `exports` fields for npm compatibility.
+- **Added:** `type-check` script (`tsc --noEmit`) for CI.
+- **Added:** `renderWaves()` and `waveLabel()` helpers in `templates.ts` — shared wave-rendering logic used by both `renderTasks` and the `ears_analyze_deps` tool.
+- **Removed:** Dead code — `renderRequirementsMd()` from `ears.ts` duplicated `renderRequirements()` from `templates.ts`.
+- **Refactor:** Complex conditionals in `validateEarsGrammar()` and `detectConflict()` extracted into named variables for readability (`hasTemporal`, `hasCompound`, `sameTrigger`, `differentResponse`, etc.).
+- **Refactor:** Inline wave-rendering loop in `index.ts` replaced with `renderWaves()` call — eliminates 12-line duplication.
+- **Refactor:** `depsMet` condition in `analyzeDependencies()` extracted into `isUnknownOrScheduled()` named helper.
+- **Refactor:** JSDoc-repeated regex patterns in `renderClarifyingQuestions()` collapsed to single-line declarations.
+- **Fix:** Test runner switched from `node --import tsx` to `npx tsx` — resolves `ERR_MODULE_NOT_FOUND` on Node 24+.
+
 ## 1.1.2
 
 - **Fix:** `formatRequirement` now outputs `THE SYSTEM SHALL` (all caps) instead of `the SYSTEM SHALL`, matching the validator's expectation.

@@ -12,15 +12,19 @@
 import type { EarsPattern, EarsRequirement, AnalysisIssue } from "./types.js";
 
 /** EARS pattern definitions */
-export const EARS_PATTERNS: Record<EarsPattern, {
-	name: string;
-	description: string;
-	template: string;
-	examples: string[];
-}> = {
-	"ubiquitous": {
+export const EARS_PATTERNS: Record<
+	EarsPattern,
+	{
+		name: string;
+		description: string;
+		template: string;
+		examples: string[];
+	}
+> = {
+	ubiquitous: {
 		name: "Ubiquitous",
-		description: "Active at all times — the most basic system rule. No trigger needed.",
+		description:
+			"Active at all times — the most basic system rule. No trigger needed.",
 		template: "<response>",
 		examples: [
 			"The SYSTEM SHALL log all write operations to an immutable audit trail.",
@@ -44,13 +48,14 @@ export const EARS_PATTERNS: Record<EarsPattern, {
 		template: "WHILE <state condition>, the SYSTEM SHALL <response>",
 		examples: [
 			"WHILE the migration script is running, the SYSTEM SHALL queue incoming writes to a dead-letter buffer.",
-			"WHILE the subscription is in \"past_due\" status, the SYSTEM SHALL downgrade the user to read-only access.",
+			'WHILE the subscription is in "past_due" status, the SYSTEM SHALL downgrade the user to read-only access.',
 			"WHILE the system is in maintenance mode, the SYSTEM SHALL return HTTP 503 with a maintenance page.",
 		],
 	},
-	"optional": {
+	optional: {
 		name: "Optional",
-		description: "Applies only when a specific feature is enabled (feature flag).",
+		description:
+			"Applies only when a specific feature is enabled (feature flag).",
 		template: "WHERE <feature>, the SYSTEM SHALL <response>",
 		examples: [
 			"WHERE the enterprise SSO module is enabled, the SYSTEM SHALL validate tokens against the configured SAML IdP.",
@@ -58,10 +63,12 @@ export const EARS_PATTERNS: Record<EarsPattern, {
 			"WHERE dark mode is enabled, the SYSTEM SHALL render UI components using the dark theme color palette.",
 		],
 	},
-	"complex": {
+	complex: {
 		name: "Complex",
-		description: "Combines multiple conditions and/or temporal constraints.",
-		template: "<temporal or compound condition>, the SYSTEM SHALL <response>",
+		description:
+			"Combines multiple conditions and/or temporal constraints.",
+		template:
+			"<temporal or compound condition>, the SYSTEM SHALL <response>",
 		examples: [
 			"WITHIN 500ms of receiving a search query, the SYSTEM SHALL return ranked results or a timeout error.",
 			"WHEN bulk import completes AND the validation report contains zero errors, the SYSTEM SHALL automatically promote the data to production.",
@@ -84,47 +91,6 @@ export function formatRequirement(req: EarsRequirement): string {
 		.replace(/^within\s+/i, "WITHIN ")
 		.replace(/,\s+the\s+system\s+shall\s+/i, ", THE SYSTEM SHALL ");
 	return `- **${req.id}** [${pattern.name}] ${formatted}`;
-}
-
-/**
- * Renders a complete requirements document to markdown.
- */
-export function renderRequirementsMd(
-	title: string,
-	stories: Array<{
-		id: string;
-		title: string;
-		asA: string;
-		wantTo: string;
-		soThat: string;
-		requirements: EarsRequirement[];
-	}>,
-): string {
-	const lines: string[] = [];
-	lines.push(`# ${title} — Requirements`);
-	lines.push("");
-	lines.push("> Generated with EARS Spec Engine — Keywords in UPPERCASE");
-	lines.push("> Patterns: Ubiquitous · Event-Driven · State-Driven · Optional · Complex");
-	lines.push("> Keywords: THE SYSTEM SHALL · WHEN · WHILE · WHERE · WITHIN");
-	lines.push("");
-
-	for (const story of stories) {
-		lines.push(`## ${story.id}: ${story.title}`);
-		lines.push("");
-		lines.push(`**As a** ${story.asA},`);
-		lines.push(`**I want** ${story.wantTo},`);
-		lines.push(`**So that** ${story.soThat}.`);
-		lines.push("");
-		lines.push("### Acceptance Criteria (EARS)");
-		lines.push("");
-
-		for (const req of story.requirements) {
-			lines.push(formatRequirement(req));
-		}
-		lines.push("");
-	}
-
-	return lines.join("\n");
 }
 
 /**
@@ -168,14 +134,18 @@ export function validateEarsGrammar(req: EarsRequirement): string | null {
 			}
 			break;
 
-		case "complex":
-			if (!/WITHIN\s+\d+m?s/i.test(statement) && !/WHEN\s+.+AND\s+/i.test(statement) && !/WHEN\s+.+WITHIN\s+/i.test(statement)) {
+		case "complex": {
+			const hasTemporal = /WITHIN\s+\d+m?s/i.test(statement);
+			const hasCompound = /WHEN\s+.+AND\s+/i.test(statement);
+			const hasCompoundTemporal = /WHEN\s+.+WITHIN\s+/i.test(statement);
+			if (!hasTemporal && !hasCompound && !hasCompoundTemporal) {
 				return `Complex requirement "${req.id}" should contain temporal constraints ("WITHIN Nms/Ns") or compound conditions ("WHEN X AND Y"). Got: "${statement.slice(0, 80)}..."`;
 			}
 			if (!/,\s+THE SYSTEM SHALL\s+/.test(statement)) {
 				return `Complex requirement "${req.id}" must contain ", THE SYSTEM SHALL ..." (UPPERCASE required). Got: "${statement.slice(0, 80)}..."`;
 			}
 			break;
+		}
 	}
 
 	return null;
@@ -185,7 +155,10 @@ export function validateEarsGrammar(req: EarsRequirement): string | null {
  * Detects potential conflicts between two requirements.
  * Returns null if no conflict, or a description of the conflict.
  */
-export function detectConflict(a: EarsRequirement, b: EarsRequirement): string | null {
+export function detectConflict(
+	a: EarsRequirement,
+	b: EarsRequirement,
+): string | null {
 	const aLower = a.statement.toLowerCase();
 	const bLower = b.statement.toLowerCase();
 
@@ -197,19 +170,25 @@ export function detectConflict(a: EarsRequirement, b: EarsRequirement): string |
 
 	// Opposite-semantic pairs (allow/reject, allow/deny, create/delete, etc.)
 	const opposites: Array<[Set<string>, Set<string>]> = [
-		[new Set(["allow", "permit", "accept"]), new Set(["reject", "deny", "block", "refuse"])],
-		[new Set(["create", "insert", "add"]), new Set(["delete", "remove", "drop"])],
+		[
+			new Set(["allow", "permit", "accept"]),
+			new Set(["reject", "deny", "block", "refuse"]),
+		],
+		[
+			new Set(["create", "insert", "add"]),
+			new Set(["delete", "remove", "drop"]),
+		],
 		[new Set(["enable", "activate"]), new Set(["disable", "deactivate"])],
 		[new Set(["grant"]), new Set(["revoke"])],
 	];
 
 	for (const [allowSet, rejectSet] of opposites) {
-		const aAllows = [...allowSet].some((w) => aMatch.includes(w));
-		const bRejects = [...rejectSet].some((w) => bMatch.includes(w));
-		const bAllows = [...allowSet].some((w) => bMatch.includes(w));
-		const aRejects = [...rejectSet].some((w) => aMatch.includes(w));
+		const aAllowing = [...allowSet].some((w) => aMatch.includes(w));
+		const bRejecting = [...rejectSet].some((w) => bMatch.includes(w));
+		const bAllowing = [...allowSet].some((w) => bMatch.includes(w));
+		const aRejecting = [...rejectSet].some((w) => aMatch.includes(w));
 
-		if ((aAllows && bRejects) || (aRejects && bAllows)) {
+		if ((aAllowing && bRejecting) || (aRejecting && bAllowing)) {
 			// Check if they operate on the same object
 			const extractObject = (action: string): string => {
 				const words = action.split(/\s+/);
@@ -221,7 +200,11 @@ export function detectConflict(a: EarsRequirement, b: EarsRequirement): string |
 			const bObj = extractObject(bMatch);
 
 			// If objects overlap significantly, it's a conflict
-			if (aObj && bObj && (aObj === bObj || aObj.includes(bObj) || bObj.includes(aObj))) {
+			if (
+				aObj &&
+				bObj &&
+				(aObj === bObj || aObj.includes(bObj) || bObj.includes(aObj))
+			) {
 				return `Requirements "${a.id}" and "${b.id}" contradict: one permits what the other forbids regarding "${aObj.length < bObj.length ? aObj : bObj}"`;
 			}
 		}
@@ -230,7 +213,9 @@ export function detectConflict(a: EarsRequirement, b: EarsRequirement): string |
 	// Same trigger, different responses
 	const aTrigger = aLower.match(/^when\s+(.+?),\s+the system shall/)?.[1];
 	const bTrigger = bLower.match(/^when\s+(.+?),\s+the system shall/)?.[1];
-	if (aTrigger && bTrigger && aTrigger === bTrigger && aMatch !== bMatch) {
+	const sameTrigger = aTrigger && bTrigger && aTrigger === bTrigger;
+	const differentResponse = aMatch !== bMatch;
+	if (sameTrigger && differentResponse) {
 		return `Requirements "${a.id}" and "${b.id}" share the same trigger "${aTrigger}" but specify different responses`;
 	}
 
@@ -246,19 +231,33 @@ export function detectAmbiguity(req: EarsRequirement): string[] {
 	const ambiguousTerms = [
 		{ term: "etc", fix: "be explicit about all cases" },
 		{ term: "and/or", fix: "use 'AND' or 'OR' explicitly" },
-		{ term: "appropriate", fix: "define what 'appropriate' means specifically" },
-		{ term: "as needed", fix: "define the condition that triggers the action" },
-		{ term: "timely", fix: "specify a concrete time bound (e.g., 'within 500ms')" },
+		{
+			term: "appropriate",
+			fix: "define what 'appropriate' means specifically",
+		},
+		{
+			term: "as needed",
+			fix: "define the condition that triggers the action",
+		},
+		{
+			term: "timely",
+			fix: "specify a concrete time bound (e.g., 'within 500ms')",
+		},
 		{ term: "efficient", fix: "define measurable performance criteria" },
 		{ term: "user-friendly", fix: "describe specific UX behavior" },
 		{ term: "properly", fix: "describe the correct behavior explicitly" },
-		{ term: "various", fix: "enumerate all cases instead of saying 'various'" },
+		{
+			term: "various",
+			fix: "enumerate all cases instead of saying 'various'",
+		},
 		{ term: "sometimes", fix: "define the condition explicitly" },
 	];
 
 	for (const { term, fix } of ambiguousTerms) {
 		if (statement.includes(term)) {
-			issues.push(`"${req.id}": Contains ambiguous term "${term}" — ${fix}`);
+			issues.push(
+				`"${req.id}": Contains ambiguous term "${term}" — ${fix}`,
+			);
 		}
 	}
 
@@ -268,7 +267,9 @@ export function detectAmbiguity(req: EarsRequirement): string[] {
 /**
  * Analyzes a set of requirements and returns detected issues.
  */
-export function analyzeRequirements(requirements: EarsRequirement[]): AnalysisIssue[] {
+export function analyzeRequirements(
+	requirements: EarsRequirement[],
+): AnalysisIssue[] {
 	const issues: AnalysisIssue[] = [];
 
 	// Grammar validation
@@ -295,7 +296,8 @@ export function analyzeRequirements(requirements: EarsRequirement[]): AnalysisIs
 					severity: "high",
 					description: conflict,
 					requirementIds: [requirements[i].id, requirements[j].id],
-					suggestion: "Review both requirements and reconcile the contradiction. One may need to be scoped with a 'Where' condition.",
+					suggestion:
+						"Review both requirements and reconcile the contradiction. One may need to be scoped with a 'Where' condition.",
 				});
 			}
 		}
@@ -310,19 +312,46 @@ export function analyzeRequirements(requirements: EarsRequirement[]): AnalysisIs
 				severity: "low",
 				description: amb,
 				requirementIds: [req.id],
-				suggestion: "Replace the ambiguous term with an explicit, measurable condition.",
+				suggestion:
+					"Replace the ambiguous term with an explicit, measurable condition.",
 			});
 		}
 	}
 
 	// Check for missing edge cases (incompleteness heuristics)
-	const allStatements = requirements.map((r) => r.statement.toLowerCase()).join(" ");
-	const missingPatterns: Array<{ pattern: string; issue: string; severity: "medium" | "low" }> = [
-		{ pattern: "error", issue: "No error handling requirement found", severity: "medium" },
-		{ pattern: "invalid", issue: "No validation for invalid input specified", severity: "medium" },
-		{ pattern: "empty", issue: "No handling for empty/null states specified", severity: "low" },
-		{ pattern: "unauthorized", issue: "No unauthorized access scenario specified", severity: "medium" },
-		{ pattern: "timeout", issue: "No timeout behavior specified", severity: "low" },
+	const allStatements = requirements
+		.map((r) => r.statement.toLowerCase())
+		.join(" ");
+	const missingPatterns: Array<{
+		pattern: string;
+		issue: string;
+		severity: "medium" | "low";
+	}> = [
+		{
+			pattern: "error",
+			issue: "No error handling requirement found",
+			severity: "medium",
+		},
+		{
+			pattern: "invalid",
+			issue: "No validation for invalid input specified",
+			severity: "medium",
+		},
+		{
+			pattern: "empty",
+			issue: "No handling for empty/null states specified",
+			severity: "low",
+		},
+		{
+			pattern: "unauthorized",
+			issue: "No unauthorized access scenario specified",
+			severity: "medium",
+		},
+		{
+			pattern: "timeout",
+			issue: "No timeout behavior specified",
+			severity: "low",
+		},
 	];
 
 	for (const { pattern, issue, severity } of missingPatterns) {
@@ -352,7 +381,11 @@ export function formatAnalysisReport(issues: AnalysisIssue[]): string {
 	const lines: string[] = [];
 	lines.push(`## Requirements Analysis\n`);
 
-	const bySeverity: Record<string, AnalysisIssue[]> = { high: [], medium: [], low: [] };
+	const bySeverity: Record<string, AnalysisIssue[]> = {
+		high: [],
+		medium: [],
+		low: [],
+	};
 	for (const issue of issues) {
 		bySeverity[issue.severity]?.push(issue);
 	}

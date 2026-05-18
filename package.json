@@ -1,6 +1,6 @@
 {
   "name": "ears-spec-engine",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "EARS Spec-Driven Development — Kiro-inspired SDD with EARS notation, design docs, and dependency-tracked tasks",
   "keywords": [
     "pi-package",
@@ -20,6 +20,13 @@
     "url": "https://github.com/XpycT/ears-spec-engine/issues"
   },
   "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./ears": "./lib/ears.ts",
+    "./templates": "./lib/templates.ts",
+    "./types": "./lib/types.ts"
+  },
   "files": [
     "index.ts",
     "lib/",
@@ -38,7 +45,8 @@
     ]
   },
   "scripts": {
-    "test": "node --import tsx --test lib/ears.test.ts lib/templates.test.ts",
+    "test": "npx tsx --test lib/ears.test.ts lib/templates.test.ts",
+    "type-check": "tsc --noEmit",
     "prepare": "npm test"
   },
   "devDependencies": {

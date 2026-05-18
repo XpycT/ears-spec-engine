@@ -87,10 +87,10 @@ Running `/ears:spec user authentication` produces this structure:
 | Pattern          | Template                                       | Example                                                                                          |
 | ---------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | **Ubiquitous**   | `THE SYSTEM SHALL <response>`                  | `THE SYSTEM SHALL hash passwords using bcrypt with cost factor 12.`                              |
-| **Event-Driven** | `WHEN <trigger>, the SYSTEM SHALL <response>`  | `WHEN a payment webhook is received, the SYSTEM SHALL verify the HMAC signature.`                |
-| **State-Driven** | `WHILE <state>, the SYSTEM SHALL <response>`   | `WHILE the system is in maintenance mode, the SYSTEM SHALL return HTTP 503.`                     |
-| **Optional**     | `WHERE <feature>, the SYSTEM SHALL <response>` | `WHERE the enterprise SSO module is enabled, the SYSTEM SHALL validate tokens against SAML IdP.` |
-| **Complex**      | `<condition>, the SYSTEM SHALL <response>`     | `WITHIN 500ms of receiving a query, the SYSTEM SHALL return ranked results.`                     |
+| **Event-Driven** | `WHEN <trigger>, THE SYSTEM SHALL <response>`  | `WHEN a payment webhook is received, THE SYSTEM SHALL verify the HMAC signature.`                |
+| **State-Driven** | `WHILE <state>, THE SYSTEM SHALL <response>`   | `WHILE the system is in maintenance mode, THE SYSTEM SHALL return HTTP 503.`                     |
+| **Optional**     | `WHERE <feature>, THE SYSTEM SHALL <response>` | `WHERE the enterprise SSO module is enabled, THE SYSTEM SHALL validate tokens against SAML IdP.` |
+| **Complex**      | `<condition>, THE SYSTEM SHALL <response>`     | `WITHIN 500ms of receiving a query, THE SYSTEM SHALL return ranked results.`                     |
 
 ### Grammar Rules
 
@@ -110,14 +110,23 @@ npm install
 
 # Run tests
 npm test
+
+# Type check
+npm run type-check
 ```
 
-All tests use Node's built-in `node:test` runner:
+All tests use Node's built-in `node:test` runner via `tsx`:
 
 ```
 npm test
-# 68 tests — 12 suites, all pass
+# 67 tests — 12 suites, all pass
 ```
+
+### Code Style
+
+- Tabs for indentation (4-width), spaces for JSON/YAML
+- `.editorconfig` enforces consistent formatting
+- Run `npm run type-check` for TypeScript validation
 
 ## Architecture
 
@@ -125,12 +134,14 @@ npm test
 ears-spec-engine/
 ├── index.ts           # Extension entry point (tool and command registration)
 ├── lib/
-│   ├── types.ts       # TypeScript type definitions
-│   ├── ears.ts        # EARS validation, conflict detection, analysis
-│   └── templates.ts   # Document rendering and dependency graph analysis
+│   ├── types.ts        # TypeScript type definitions
+│   ├── ears.ts         # EARS validation, conflict detection, analysis
+│   └── templates.ts    # Document rendering and dependency graph analysis
 ├── skills/
 │   └── ears-spec/
-│       └── SKILL.md   # Nested skill definition
+│       └── SKILL.md    # Nested skill definition
+├── .editorconfig
+├── LICENSE             # MIT
 ├── package.json
 ├── tsconfig.json
 └── README.md

@@ -3,7 +3,12 @@
  */
 
 /** EARS requirement pattern types */
-export type EarsPattern = "ubiquitous" | "event-driven" | "state-driven" | "optional" | "complex";
+export type EarsPattern =
+	| "ubiquitous"
+	| "event-driven"
+	| "state-driven"
+	| "optional"
+	| "complex";
 
 /** A single EARS requirement */
 export interface EarsRequirement {

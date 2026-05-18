@@ -39,6 +39,7 @@ import {
 import {
 	renderClarifyingQuestions,
 	analyzeDependencies,
+	renderWaves,
 } from "./lib/templates.js";
 
 export default function earsSpecEngine(pi: ExtensionAPI): void {
@@ -129,7 +130,9 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			requirements: Type.Array(
 				Type.Object({
-					id: Type.String({ description: "Requirement ID (e.g., REQ-001)" }),
+					id: Type.String({
+						description: "Requirement ID (e.g., REQ-001)",
+					}),
 					pattern: Type.Enum({
 						ubiquitous: "ubiquitous",
 						"event-driven": "event-driven",
@@ -146,14 +149,26 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 		}),
 
 		async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-			const results: Array<{ id: string; valid: boolean; error?: string }> = [];
+			const results: Array<{
+				id: string;
+				valid: boolean;
+				error?: string;
+			}> = [];
 			const patternCount: Record<string, number> = {};
 
 			for (const req of params.requirements) {
 				const pattern = req.pattern as EarsPattern;
 				patternCount[pattern] = (patternCount[pattern] || 0) + 1;
-				const error = validateEarsGrammar({ ...req, pattern, storyId: req.id });
-				results.push({ id: req.id, valid: !error, error: error || undefined });
+				const error = validateEarsGrammar({
+					...req,
+					pattern,
+					storyId: req.id,
+				});
+				results.push({
+					id: req.id,
+					valid: !error,
+					error: error || undefined,
+				});
 			}
 
 			// Check pattern diversity
@@ -167,7 +182,9 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 					? `✅ All ${results.length} requirements pass EARS grammar validation.\nPattern distribution: ${patternSummary}`
 					: `❌ ${invalid.length}/${results.length} requirements have grammar errors:\n${invalid
 							.map((r) => `  - ${r.id}: ${r.error}`)
-							.join("\n")}\n\nPattern distribution: ${patternSummary}`;
+							.join(
+								"\n",
+							)}\n\nPattern distribution: ${patternSummary}`;
 
 			return {
 				content: [{ type: "text", text: report }],
@@ -239,15 +256,20 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			tasks: Type.Array(
 				Type.Object({
-					id: Type.String({ description: "Task identifier (e.g., T-001)" }),
+					id: Type.String({
+						description: "Task identifier (e.g., T-001)",
+					}),
 					title: Type.String({ description: "Short task title" }),
-					description: Type.String({ description: "Task description" }),
+					description: Type.String({
+						description: "Task description",
+					}),
 					requirementIds: Type.Array(Type.String()),
 					dependencies: Type.Array(Type.String(), {
 						description: "IDs of tasks this task depends on",
 					}),
 					parallel: Type.Boolean({
-						description: "Whether this task can run in parallel with siblings",
+						description:
+							"Whether this task can run in parallel with siblings",
 					}),
 				}),
 			),
@@ -259,27 +281,23 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 			const lines: string[] = [];
 			lines.push(`## Dependency Analysis\n`);
 			lines.push(`**Execution Waves:** ${analysis.waves.length}\n`);
-			for (let w = 0; w < analysis.waves.length; w++) {
-				const wave = analysis.waves[w];
-				lines.push(
-					`### Wave ${w}${w === 0 ? " (Foundation)" : w === analysis.waves.length - 1 ? " (Final)" : ""}`,
-				);
-				for (const task of wave) {
-					const p = task.parallel ? " [P]" : "";
-					lines.push(`- ${task.id}${p} — ${task.title}`);
-				}
-				lines.push("");
-			}
+			lines.push(renderWaves(analysis.waves));
 
-			lines.push(`**Critical Path:** ${analysis.criticalPath.join(" → ")}`);
-			lines.push(`**Minimum Waves (parallel):** ${analysis.waves.length}`);
+			lines.push(
+				`**Critical Path:** ${analysis.criticalPath.join(" → ")}`,
+			);
+			lines.push(
+				`**Minimum Waves (parallel):** ${analysis.waves.length}`,
+			);
 			lines.push(`**Minimum Waves (serial):** ${params.tasks.length}`);
 
 			if (analysis.unknownDeps && analysis.unknownDeps.length > 0) {
 				lines.push("");
 				lines.push("⚠️ **Unknown Dependencies:**");
 				for (const dep of analysis.unknownDeps) {
-					lines.push(`  - \`${dep}\` references a task that doesn't exist in the list`);
+					lines.push(
+						`  - \`${dep}\` references a task that doesn't exist in the list`,
+					);
 				}
 			}
 
@@ -303,7 +321,8 @@ export default function earsSpecEngine(pi: ExtensionAPI): void {
 		description:
 			"Quick Plan mode — clarify requirements, then generate requirements, design, and tasks in one pass (Kiro Quick Plan equivalent)",
 		handler: async (args, ctx) => {
-			if (!args || args.trim().length === 0) {
+			const description = args?.trim();
+			if (!description) {
 				ctx.ui.notify(
 					"Usage: /ears:quick-plan <feature description>",
 					"warning",
@@ -345,7 +364,10 @@ After I get your answers, I will generate:
 			"Phase 1: Generate EARS requirements document from a feature description",
 		handler: async (args, ctx) => {
 			if (!args || args.trim().length === 0) {
-				ctx.ui.notify("Usage: /ears:spec <feature description>", "warning");
+				ctx.ui.notify(
+					"Usage: /ears:spec <feature description>",
+					"warning",
+				);
 				return;
 			}
 
@@ -402,7 +424,10 @@ Follow EARS grammar rules:
 			}
 			if (!state.requirements && state.currentSpecsDir) {
 				try {
-					const reqPath = path.join(state.currentSpecsDir, "requirements.md");
+					const reqPath = path.join(
+						state.currentSpecsDir,
+						"requirements.md",
+					);
 					const content = await fs.readFile(reqPath, "utf-8");
 					pi.sendMessage(
 						{
@@ -436,7 +461,9 @@ Run the \`ears_analyze\` tool (ears_analyze) to check grammar and detect issues 
 				return;
 			}
 
-			const allReqs = state.requirements.stories.flatMap((s) => s.requirements);
+			const allReqs = state.requirements.stories.flatMap(
+				(s) => s.requirements,
+			);
 			const analysis = analyzeRequirements(allReqs);
 			state.lastAnalysis = analysis;
 
@@ -555,7 +582,8 @@ Present for user approval after generation.`,
 			parts.push("📋 **EARS Spec Engine Status**\n");
 
 			// Determine the specs directory: from state or by scanning .ears-spec/
-			let specsDir: string | undefined = state.currentSpecsDir || undefined;
+			let specsDir: string | undefined =
+				state.currentSpecsDir || undefined;
 			if (!specsDir) {
 				specsDir = (await findSpecsDir()) ?? undefined;
 			}
@@ -571,7 +599,9 @@ Present for user approval after generation.`,
 				tasks: false,
 			};
 			if (specsDir) {
-				for (const name of Object.keys(files) as Array<keyof typeof files>) {
+				for (const name of Object.keys(files) as Array<
+					keyof typeof files
+				>) {
 					const filePath = path.join(specsDir, `${name}.md`);
 					try {
 						await fs.access(filePath);
@@ -599,7 +629,9 @@ Present for user approval after generation.`,
 
 			// Report Design status
 			if (state.design) {
-				parts.push(`- ✅ Design: ${state.design.sections.length} sections`);
+				parts.push(
+					`- ✅ Design: ${state.design.sections.length} sections`,
+				);
 			} else if (files.design) {
 				parts.push("- ✅ Design: file exists on disk");
 			} else {
@@ -635,9 +667,12 @@ Present for user approval after generation.`,
 	pi.on("tool_result", async (event, ctx) => {
 		// Track when ears_analyze is called
 		if (event.toolName === "ears_analyze") {
-			const details = event.details as Record<string, unknown> | undefined;
+			const details = event.details as
+				| Record<string, unknown>
+				| undefined;
 			if (details && Array.isArray(details.issues)) {
-				state.lastAnalysis = details.issues as SpecEngineState["lastAnalysis"];
+				state.lastAnalysis =
+					details.issues as SpecEngineState["lastAnalysis"];
 				updateStatusWidget(ctx);
 			}
 		}
@@ -648,7 +683,8 @@ Present for user approval after generation.`,
 		for (const entry of ctx.sessionManager.getEntries()) {
 			if (
 				entry.type === "custom" &&
-				(entry as { customType?: string }).customType === "ears-spec-state"
+				(entry as { customType?: string }).customType ===
+					"ears-spec-state"
 			) {
 				const data = (entry as { data?: SpecEngineState }).data;
 				if (data) {

@@ -7,6 +7,32 @@ import type { UserStory, SpecTask, DependencyAnalysis } from "./types.js";
 import { formatRequirement } from "./ears.js";
 
 /**
+ * Renders a wave label (e.g., "Wave 0 (Foundation)", "Wave 2 (Final)").
+ */
+function waveLabel(index: number, total: number): string {
+	if (index === 0) return `### Wave ${index} (Foundation)`;
+	if (index === total - 1) return `### Wave ${index} (Final)`;
+	return `### Wave ${index}`;
+}
+
+/**
+ * Renders execution waves as markdown lines.
+ */
+export function renderWaves(waves: SpecTask[][]): string {
+	const lines: string[] = [];
+	for (let w = 0; w < waves.length; w++) {
+		lines.push(waveLabel(w, waves.length));
+		lines.push("");
+		for (const task of waves[w]) {
+			const p = task.parallel ? " `[P]`" : "";
+			lines.push(`- ${task.id}${p} — ${task.title}`);
+		}
+		lines.push("");
+	}
+	return lines.join("\n");
+}
+
+/**
  * Renders a complete requirements.md document.
  */
 export function renderRequirements(
@@ -16,7 +42,9 @@ export function renderRequirements(
 	const lines: string[] = [];
 	lines.push(`# ${projectName} — Requirements`);
 	lines.push("");
-	lines.push("> Spec-Driven Development · EARS Notation (UPPERCASE keywords)");
+	lines.push(
+		"> Spec-Driven Development · EARS Notation (UPPERCASE keywords)",
+	);
 	lines.push("");
 	lines.push("## Table of Stories");
 	lines.push("");
@@ -94,18 +122,7 @@ export function renderTasks(
 			"Tasks are organized into execution **waves** based on dependencies.\nWithin each wave, tasks can run in parallel.\n",
 		);
 		lines.push("");
-		for (let w = 0; w < analysis.waves.length; w++) {
-			const wave = analysis.waves[w];
-			lines.push(
-				`### Wave ${w}${w === 0 ? " (Foundation)" : w === analysis.waves.length - 1 ? " (Final)" : ""}`,
-			);
-			lines.push("");
-			for (const task of wave) {
-				const tags = task.parallel ? " `[P]`" : "";
-				lines.push(`- ${task.id}${tags} — ${task.title}`);
-			}
-			lines.push("");
-		}
+		lines.push(renderWaves(analysis.waves));
 	}
 
 	lines.push("## Task Breakdown");
@@ -143,12 +160,10 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 	const waves: SpecTask[][] = [];
 
 	// ── Build adjacency list: dep → [dependents] ──────────────────────────
-	const dependents = new Map<string, string[]>();
 	for (const task of tasks) {
 		for (const depId of task.dependencies) {
-			const list = dependents.get(depId) ?? [];
-			list.push(task.id);
-			dependents.set(depId, list);
+			// Adjacency list built implicitly by wave scheduling below
+			void depId; // dependency direction: task → depId (task depends on depId)
 		}
 	}
 
@@ -171,9 +186,9 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 		const wave: SpecTask[] = [];
 		for (const task of tasks) {
 			if (scheduled.has(task.id)) continue;
-			const depsMet = task.dependencies.every(
-				(depId) => !taskMap.has(depId) || scheduled.has(depId),
-			);
+			const isUnknownOrScheduled = (depId: string) =>
+				!taskMap.has(depId) || scheduled.has(depId);
+			const depsMet = task.dependencies.every(isUnknownOrScheduled);
 			if (depsMet) {
 				wave.push(task);
 			}
@@ -194,8 +209,7 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 	const dist = new Map<string, number>();
 	const parent = new Map<string, string | null>();
 
-	// Process tasks in topological order (已有的 scheduled order from waves)
-	// We already built `scheduled` in topo order; reconstruct that order.
+	// Process tasks in topological order (scheduled order from waves)
 	const topoOrder: string[] = [];
 	for (const wave of waves) {
 		for (const task of wave) {
@@ -253,7 +267,7 @@ export function analyzeDependencies(tasks: SpecTask[]): DependencyAnalysis {
 
 /**
  * Renders clarifying questions for Quick Plan mode.
- * Returns at minimum 3 questions (scope + edge cases are always included).
+ * Returns at minimum 2 questions (scope + edge cases are always included).
  */
 export function renderClarifyingQuestions(description: string): string[] {
 	const questions: string[] = [];
